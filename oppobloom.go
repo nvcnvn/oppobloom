@@ -50,9 +50,12 @@ func (f *Filter) Contains(id []byte) bool {
 
 // Forget removes id if it in the filter.
 func (f *Filter) Forget(id []byte) {
-	indexPtr := (*unsafe.Pointer)(unsafe.Pointer(&f.array[f.caculateIndex(id)]))
-	oldIdUnsafe := atomic.LoadPointer(indexPtr)
-	atomic.CompareAndSwapPointer(indexPtr, oldIdUnsafe, f.forgetedUnsafe)
+	item := &f.array[f.caculateIndex(id)]
+	itemPtr := (*unsafe.Pointer)(unsafe.Pointer(item))
+	itemUnsafe := atomic.LoadPointer(itemPtr)
+	if bytes.Compare(**item, id) == 0 {
+		atomic.CompareAndSwapPointer(itemPtr, itemUnsafe, f.forgetedUnsafe)
+	}
 }
 
 func (f *Filter) caculateIndex(id []byte) int32 {
